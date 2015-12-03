@@ -109,7 +109,7 @@ def messages_count(name):
 @app.route("/queues/<name>/msgs", methods=['POST'])
 def messages_write(name):
 	"""
-	Get message count for queue
+	Writee message to queue
 
 	curl -s -X POST -H 'Accept: application/json' http://localhost:5000/queues/D15123353_Lab12/msgs -d '{"content": "this is the message I want to put on the queue"}' 
 	curl -s -X POST -H 'Accept: application/json' 52.18.184.96:8080/queues/D15123353_Lab12/msgs -d '{"content": "this is the message I want to put on the queue"}'
@@ -127,6 +127,46 @@ def messages_write(name):
 	
 	resp = "Message "+messageText+" has been written to queue "+name+"\n"
 	return Response(response=resp, mimetype="application/json")	
+
+
+@app.route("/queues/<name>/msgs", methods=['GET'])
+def messages_read(name):
+	"""
+	Get message from queue
+
+	curl -X GET -H 'Accept: application/json' http://localhost:5000/queues/D15123353_Lab12/msgs
+	curl -X GET -H 'Accept: application/json' 52.18.184.96:8080/queues/D15123353_Lab12/msgs
+	"""
+
+	conn = get_conn()
+	queue = conn.get_queue(name)
+	messages = queue.get_messages()
+	if len(messages) > 0:
+		message = messages[0]
+		resp = "Queue: "+name+". \nMessage: "+ message.get_body()+"\n"
+	else:
+		resp = "No messages for queue "+name+"\n"
+	return Response(response=resp, mimetype="application/json")
+
+@app.route("/queues/<name>/msgs", methods=['DELETE'])
+def messages_consume(name):
+	"""
+	Consume message from queue
+
+	curl -X DELETE -H 'Accept: application/json' http://localhost:5000/queues/D15123353_Lab12/msgs
+	curl -X DELETE -H 'Accept: application/json' 52.18.184.96:8080/queues/D15123353_Lab12/msgs
+	"""
+
+	conn = get_conn()
+	queue = conn.get_queue(name)
+	messages = queue.get_messages()
+	if len(messages) > 0:
+		message = messages[0]
+		resp = "Queue: "+name+" \nDeleted message: "+ message.get_body()+" \n"
+		queue.delete_message(message)
+	else:
+		resp = "No messages for queue "+name+"\n"
+	return Response(response=resp, mimetype="application/json")
 
 def get_conn():
 	key_id, secret_access_key = urllib2.urlopen("http://ec2-52-30-7-5.eu-west-1.compute.amazonaws.com:81/key").read().split(':')
