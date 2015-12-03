@@ -54,7 +54,6 @@ def queues_index():
 	for q in conn.get_all_queues():
 		all.append(q.name)
 	resp = json.dumps(all)
-	print json.dumps(all)
 	return Response(response=resp, mimetype="application/json") 
 
 @app.route("/queues", methods=['POST'])
@@ -74,10 +73,25 @@ def queues_create():
 	resp = "Queue "+name+" has been created\n"
 	return Response(response=resp, mimetype="application/json")
 
+@app.route("/queues/<name>", methods=['DELETE'])
+def queues_remove(name):
+	"""
+	Crete queue
+
+	curl -X DELETE -H 'Accept: application/json' http://localhost:5000/queues/D15123353_Lab12
+	curl -X DELETE -H 'Accept: application/json' 52.18.184.96:8080/queues/D15123353_Lab12
+	
+	"""
+
+	conn = get_conn()
+	queue = conn.get_queue(name)
+	conn.delete_queue(queue)
+	
+	resp = "Queue "+name+" has been removed\n"
+	return Response(response=resp, mimetype="application/json")
+
 def get_conn():
 	key_id, secret_access_key = urllib2.urlopen("http://ec2-52-30-7-5.eu-west-1.compute.amazonaws.com:81/key").read().split(':')
-	print "\nKey id: " +key_id
-	print "Secret access key: " + secret_access_key + "\n"
 	return boto.sqs.connect_to_region("eu-west-1", aws_access_key_id=key_id ,aws_secret_access_key=secret_access_key)
 
 if __name__ == "__main__":
