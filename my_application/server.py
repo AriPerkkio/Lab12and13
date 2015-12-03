@@ -76,7 +76,7 @@ def queues_create():
 @app.route("/queues/<name>", methods=['DELETE'])
 def queues_remove(name):
 	"""
-	Crete queue
+	Delete queue
 
 	curl -X DELETE -H 'Accept: application/json' http://localhost:5000/queues/D15123353_Lab12
 	curl -X DELETE -H 'Accept: application/json' 52.18.184.96:8080/queues/D15123353_Lab12
@@ -89,6 +89,44 @@ def queues_remove(name):
 	
 	resp = "Queue "+name+" has been removed\n"
 	return Response(response=resp, mimetype="application/json")
+
+@app.route("/queues/<name>/msgs/count", methods=['GET'])
+def messages_count(name):
+	"""
+	Get message count for queue
+
+	curl -X GET -H 'Accept: application/json' http://localhost:5000/queues/D15123353_Lab12/msgs/count
+	curl -X GET -H 'Accept: application/json' 52.18.184.96:8080/queues/D15123353_Lab12/msgs/count
+	"""
+
+	conn = get_conn()
+	queue = conn.get_queue(name)
+	count = queue.count()
+	
+	resp = "Queue "+name+" has "+str(count)+" messages\n"
+	return Response(response=resp, mimetype="application/json")	
+
+@app.route("/queues/<name>/msgs", methods=['POST'])
+def messages_write(name):
+	"""
+	Get message count for queue
+
+	curl -s -X POST -H 'Accept: application/json' http://localhost:5000/queues/D15123353_Lab12/msgs -d '{"content": "this is the message I want to put on the queue"}' 
+	curl -s -X POST -H 'Accept: application/json' 52.18.184.96:8080/queues/D15123353_Lab12/msgs -d '{"content": "this is the message I want to put on the queue"}'
+	"""
+
+	body = request.get_json(force=True)
+	messageText = body['content']
+	
+	conn = get_conn()
+	queue = conn.get_queue(name)
+	queue.set_message_class(Message)
+	m = Message()
+	m.set_body(messageText)
+	queue.write(m)
+	
+	resp = "Message "+messageText+" has been written to queue "+name+"\n"
+	return Response(response=resp, mimetype="application/json")	
 
 def get_conn():
 	key_id, secret_access_key = urllib2.urlopen("http://ec2-52-30-7-5.eu-west-1.compute.amazonaws.com:81/key").read().split(':')
