@@ -21,7 +21,6 @@ EXPOSE 5000
 
 # Set the default directory where CMD will execute
 WORKDIR /my_application
-RUN mkdir /data
-# Set the default command to execute    
+
 # when creating a new container
 CMD python server.py
