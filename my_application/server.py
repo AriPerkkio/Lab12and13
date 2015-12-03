@@ -47,7 +47,7 @@ def queues_index():
 	List all queues
 
 	curl -s -X GET -H 'Accept: application /json' http://localhost:5000/queues | python -mjson.tool
-
+ 	curl -s -X GET -H 'Accept: application /json' 52.18.184.96:8080/queues | python -mjson.tool
 	"""
 	all = []
 	conn = get_conn()
@@ -57,12 +57,28 @@ def queues_index():
 	print json.dumps(all)
 	return Response(response=resp, mimetype="application/json") 
 
+@app.route("/queues", methods=['POST'])
+def queues_create():
+	"""
+	Crete queue
+
+	curl -X POST -H 'Content-Type: application/json' http://localhost:5000/queues -d '{"name": "D15123353_Lab12"}'
+	curl -X POST -H 'Content-Type: application/json' 52.18.184.96:8080/queues -d '{"name": "D15123353_Lab12"}'	
+	
+	"""
+
+	conn = get_conn()
+	body = request.get_json(force=True)
+	name = body['name']
+	queue = conn.create_queue(name, 120)
+	resp = "Queue "+name+" has been created\n"
+	return Response(response=resp, mimetype="application/json")
+
 def get_conn():
 	key_id, secret_access_key = urllib2.urlopen("http://ec2-52-30-7-5.eu-west-1.compute.amazonaws.com:81/key").read().split(':')
 	print "\nKey id: " +key_id
 	print "Secret access key: " + secret_access_key + "\n"
 	return boto.sqs.connect_to_region("eu-west-1", aws_access_key_id=key_id ,aws_secret_access_key=secret_access_key)
-
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0",port=5000, debug=True)
